@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rádio ao Vivo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        form select, button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        form select {
+            background: #fff;
+            color: #333;
+        }
+
+        button {
+            background-color: #28a745;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .radio-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .left, .right {
+            flex: 1 1 45%;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .left h2, .right h2 {
+            margin-top: 0;
+        }
+
+        .album-cover {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .album-cover img {
+            border-radius: 12px;
+            max-width: 100%;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .lyrics-container {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            color: #fff;
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Selecione uma Rádio para Ouvir</h1>
+        
+        <form method="POST" action="/">
+            <select name="station" required>
+                <option value="" disabled selected>Escolha uma rádio</option>
+                {% for radio in radios %}
+                    <option value="{{ radio['url_resolved'] }}" {% if selected_url == radio['url_resolved'] %}selected{% endif %}>{{ radio['name'] }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Ouvir</button>
+        </form>
+
+        {% if selected_radio %}
+        <div class="radio-info">
+            <div class="left">
+                <h2>{{ artist }} - {{ song }}</h2>
+                <div class="lyrics-container">
+                    <pre>{{ lyrics }}</pre> <!-- Exibe a letra da música -->
+                </div>
+            </div>
+            <div class="right">
+                <div class="album-cover">
+                    <img src="{{ album_cover or 'https://placehold.co/300x300/cccccc/000000?text=Sem+Capa' }}" alt="Capa do Álbum">
+                </div>
+                <!-- Adicionando autoplay ao player de áudio -->
+                <audio controls autoplay>
+                    <source src="{{ selected_radio['url_resolved'] }}" type="audio/mpeg">
+                    Seu navegador não suporta o elemento de áudio.
+                </audio>
+            </div>
+        </div>
+        <div class="song-history">
+            <h3>Histórico de Músicas</h3>
+            <ul>
+                {% for entry in song_history %}
+                    <li>{{ entry }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Função para fazer a requisição AJAX e atualizar as informações
+        function updateRadioInfo() {
+            let radioUrl = "{{ selected_url }}";  // Pega a URL da rádio atual
+            if (radioUrl) {
+                fetch(`/get_radio_info?radio_url=${radioUrl}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Atualiza as informações no HTML
+                        document.querySelector('.left h2').textContent = `${data.artist} - ${data.song}`;
+                        document.querySelector('.right img').src = data.album_cover || "https://placehold.co/300x300/cccccc/000000?text=Sem+Capa";
+                        document.querySelector('.song-history ul').innerHTML = data.song_history.map(item => `<li>${item}</li>`).join('');
+                        document.querySelector('.left .lyrics-container pre').textContent = data.lyrics;
+                    })
+                    .catch(error => console.log("Erro ao atualizar informações: ", error));
+            }
+        }
+
+        // Atualizar as informações a cada 10 segundos
+        setInterval(updateRadioInfo, 10000);  // 30 segundos
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
