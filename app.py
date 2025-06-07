@@ -56,7 +56,7 @@ def get_lyrics(artist, title):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    url = 'https://de1.api.radio-browser.info/json/stations/bycountry/Portugal'
+    url = 'https://de2.api.radio-browser.info/json/stations/bycountry/Portugal'
     try:
         response = requests.get(url, timeout=10)
         radios = response.json() if response.status_code == 200 else []
